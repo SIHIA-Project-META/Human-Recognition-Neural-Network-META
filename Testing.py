@@ -13,8 +13,8 @@ Model01.model.eval()
 Cam_is_running = False
 Last_frame = None
 
-def Starting():
-    Cam.start()
+def Starting(width, height):
+    Cam.start(width, height)
 
 def Stoping():
     Cam.stop()
@@ -34,7 +34,7 @@ while True:
 
     if keyboard.is_pressed("space") and not Cam_is_running:
         print("starting the model...")
-        Starting()
+        Starting(width=1920, height=1080)
         Cam_is_running = True
         print("you can get a single frame by pressing f")
     
@@ -49,15 +49,25 @@ while True:
         if Frame is None:
             continue
 
+        Frame = cv2.flip(Frame, 1)
         Last_frame = Frame.copy()
 
-        Detections = Model01.predict(Frame)
+        DetFrame = cv2.resize(Frame, (480, 360))
+        Detections = Model01.predict(DetFrame)
+
+        h_orig, w_orig = Frame.shape[:2]
+        h_det, w_det = DetFrame.shape[:2]
+
+        scale_x = w_orig / w_det
+        scale_y = h_orig / h_det
 
         for det in Detections:
             x1, y1, x2, y2 = map(int, det["bbox"].tolist())
+            x1, x2 = int(x1 * scale_x), int(x2 * scale_x)
+            y1, y2 = int(y1 * scale_y), int(y2 * scale_y)
             score = det["score"]
-            cv2.rectangle(Frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(Frame, f"face {score:.2f}", (x1, y1 - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            cv2.rectangle(Frame, (x1, y1), (x2, y2), (64, 64, 255), 2)
+            cv2.putText(Frame, f"face {score:.2f}", (x1, y1 - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 32, 64), 2)
 
         cv2.imshow("Camera - Face Detection", Frame)
         cv2.waitKey(1)

@@ -8,13 +8,16 @@ class Camera:
         self.camera_index = camera_index
         self.device = device
 
-    def start(self):
+    def start(self, width = 1280, height = 720):
 
         if self.cap is None:
             self.cap = cv2.VideoCapture(self.camera_index)
             if not self.cap.isOpened():
                 self.cap = None
                 raise RuntimeError("Error: Could not open camera.")
+            
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         
         return self
 
